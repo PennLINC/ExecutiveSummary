@@ -1,52 +1,20 @@
 
 IMAGE_INFO = {
-    'concat_pre_reg_gray': {
-        'pattern': 'DVARS_and_FD_CONCA_*task-rest*.png',
-        'title': 'Pre-Regression'
-        },
-    'concat_post_reg_gray': {
-        'pattern': 'DVARS_and_FD_CONCP_*task-rest*.png',
-        'title': 'Post-Regression'
-        },
-    'atlas_in_t1': {
-        'pattern': '*_desc-AtlasInT1w.gif',
-        'title': 'Atlas in T1'
-        },
-    't1_in_atlas': {
-        'pattern': '*_desc-T1wInAtlas.gif',
-        'title': 'T1 in Atlas'
-        },
-    'atlas_in_subcort': {
-        'pattern': '*_desc-AtlasInSubcort.gif',
-        'title': 'Atlas in Subcorticals'
-        },
-    'subcort_in_atlas': {
-        'pattern': '*_desc-SubcortInAtlas.gif',
-        'title': 'Subcorticals in Atlas'
-        },
     'task_pre_reg_gray': {
-        'pattern': 'DVARS_and_FD*%s*.png',
+        'pattern': '*%s*desc-precarpetplot_bold.svg',
         'title': 'Pre-Regression'
         },
     'task_post_reg_gray': {
-        'pattern': 'postreg_DVARS_and_FD*%s*.png',
+        'pattern': '*%s*desc-postcarpetplot_bold.svg',
         'title': 'Post-Regression'
         },
-    'task_in_t1': {
-        'pattern': '*%s*_desc-TaskInT1.gif',
-        'title': 'Task in T1'
-        },
-    't1_in_task': {
-        'pattern': '*%s*_desc-T1InTask.gif',
-        'title': 'T1 in Task'
+    'bold_t1w_reg': {
+        'pattern': '*%s*desc-bbregister_bold.svg',
+        'title': 'Bold T1w registration'
         },
     'ref': {
-        'pattern': '*%s*ref.png',
+        'pattern': '*%s*desc-boldref_bold.svg',
         'title': 'Reference'
-        },
-    'bold': {
-        'pattern': '*%s*bold.png',
-        'title': 'BOLD'
         }
     }
 

@@ -80,12 +80,12 @@ def find_one_file(seek_dir, pattern):
 
     # Make sure we got exactly one file.
     numfiles=len(filelist)
-    if numfiles is 1:
-        one_file = filelist[0]
-    else:
+    #if numfiles is 1:
+        #one_file = filelist[0]
+    #else:
         # TODO: Log info in errorfile.
-        print('info: Found %s files with pattern: %s' % (numfiles, glob_pattern))
-
+        #print('info: Found %s files with pattern: %s' % (numfiles, glob_pattern))
+    one_file = filelist[0]
     return one_file
 
 

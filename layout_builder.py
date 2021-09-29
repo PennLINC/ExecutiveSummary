@@ -11,7 +11,7 @@ import os
 from os import (path, getcwd, chmod, listdir)
 import stat
 import re
-import glob
+import glob as glob
 from constants import *
 from helpers import (find_one_file, find_files, find_and_copy_files)
 
@@ -153,7 +153,7 @@ class ModalSlider(ModalContainer):
 
 
 class Section(object):
-    def __init__ (self, img_path='./img', regs_slider=None, img_modal=None, **kwargs):
+    def __init__ (self, img_path='./', regs_slider=None, img_modal=None, **kwargs):
         self.section = ''
         self.scripts = ''
         self.img_path = img_path
@@ -242,68 +242,9 @@ class TxSection(Section):
 
         self.scripts = brainsprite_loader + pngs_slider.get_scripts()
 
-
-class AnatSection(Section):
-
-    def __init__ (self, img_path='./img', **kwargs):
-        Section.__init__(self, **kwargs)
-
-        self.img_path = img_path
-
-        self.run()
-
-    def write_atlas_rows(self):
-
-        row_data = {}
-        row_data['row_modal'] = self.regs_slider.get_modal_id()
-
-        # Add a row for each atlas-registered image.
-        for key in [ 'atlas_in_t1', 't1_in_atlas', 'atlas_in_subcort', 'subcort_in_atlas' ]:
-            values = IMAGE_INFO[key]
-            pattern = values['pattern']
-            img_file = find_one_file(self.img_path, pattern)
-            if img_file is not None:
-                # Add image to data and to slider.
-                row_data['row_label'] = values['title']
-                row_data['row_img'] = img_file
-                row_data['row_idx'] = self.regs_slider.add_image(img_file)
-                self.section += LAYOUT_ROW.format(**row_data)
-            else:
-                self.section += PLACEHOLDER_ROW.format( row_label = values['title'] )
-
-
-    def write_gray_row(self):
-        self.section += GRAY_ROW_START
-
-        # Get gray-ordinates plots.
-        gray_data = {}
-        gray_data['row_modal'] = self.img_modal.get_modal_id()
-
-        for key in [ 'concat_pre_reg_gray', 'concat_post_reg_gray' ]:
-            values = IMAGE_INFO[key]
-            img_file = find_one_file(self.img_path, values['pattern'])
-            if img_file is not None:
-                # Add image to data, and to the 'generic' images container.
-                gray_data['row_label'] = values['title']
-                gray_data['row_img'] = img_file
-                gray_data['row_idx'] = self.img_modal.add_image(img_file)
-                self.section += LAYOUT_QUARTER_ROW.format(**gray_data)
-            else:
-                self.section += PLACEHOLDER_QUARTER_ROW.format( row_label = values['title'] )
-
-        self.section += GRAY_ROW_END
-
-    def run(self):
-        # Write the HTML for the section.
-        self.section += ANAT_SECTION_START
-        self.write_atlas_rows()
-        self.write_gray_row()
-        self.section += ANAT_SECTION_END
-
-
 class TasksSection(Section):
 
-    def __init__ (self, tasks=[], img_path='./img', **kwargs):
+    def __init__ (self, tasks=[], img_path='./figures', **kwargs):
         Section.__init__(self, **kwargs)
 
         self.img_path = img_path
@@ -325,7 +266,7 @@ class TasksSection(Section):
         # For the processed files, it's as simple as looking for the pattern in
         # the source-directory. When found and copied to the directory of images,
         # add the row.
-        for key in [ 'task_in_t1', 't1_in_task' ]:
+        for key in ['bold_t1w_reg']:
             values = IMAGE_INFO[key]
             pattern = values['pattern'] % task_pattern
             task_file = find_one_file(self.img_path, pattern)
@@ -351,7 +292,7 @@ class TasksSection(Section):
         self.section += BOLD_GRAY_START
 
         # For bold and ref files, may include run number or not.
-        for key in [ 'bold', 'ref' ]:
+        for key in [ 'ref' ]:
             values = IMAGE_INFO[key]
             pattern = values['pattern'] % task_pattern
             task_file = find_one_file(self.img_path, pattern)
@@ -457,34 +398,17 @@ class layout_builder(object):
 
         taskset=set()
 
-        use_path = os.path.join(self.files_path, 'MNINonLinear/Results')
-        if os.path.isdir(use_path):
+        use_path = os.path.join(self.files_path)
+        if os.path.isdir(self.files_path):
             print('\nProcessed tasks will be found in path:\n\t%s' % use_path)
-        else:
-            use_path = self.files_path
-            print('\nProcessed tasks will be found in path:\n\t%s' % use_path)
+    
+        filex =  glob.glob(self.files_path + '/*bbregister_bold.svg')
 
-        for name in os.listdir(use_path):
-
-            # Only deal with subdirectories.
-            pathname = os.path.join(use_path, name)
-            if stat.S_ISDIR(os.stat(pathname).st_mode):
-
-                # The name must match task- something. Ignore anything else.
-                # The name may contain other information  and it may or may not
-                # have '_run-' in it. For example:
-                #      ses-TWO_task-rest_run-01
-                #      task-rest01
-                # We want to capture the name of the task (word after 'task-'),
-                # lose anything between that name and the digits, and capture
-                # all of the digits:
-
-                task_re = re.compile('task-([^_\d]+)\D*(\d+).*')
-                match = task_re.search(name)
-
-                if match is not None:
-                    # Add this tuple to the set of tasks.
-                    taskset.add(match.group(1,2))
+        for name in filex:
+            task_re = re.compile('task-([^_\d]+)\D*(\d+).*')
+            match = task_re.search(name)
+            if match is not None:
+                taskset.add(match.group(1,2))
 
         return sorted(taskset)
 
@@ -547,8 +471,8 @@ class layout_builder(object):
 
         # Data for this subject/session: i.e., concatenated gray plots and atlas
         # images. (The atlas images will be added to the Registrations slider.)
-        anat_section = AnatSection(**kwargs)
-        body += anat_section.get_section()
+        #anat_section = AnatSection(**kwargs)
+        #body += anat_section.get_section()
 
         # Tasks section: data specific to each task/run. Get a list of tasks processed
         # for this subject. (The <task>-in-T1 and T1-in-<task> images will be added to
