@@ -12,6 +12,7 @@ from os import (path, getcwd, chmod, listdir)
 import stat
 import re
 import glob as glob
+from pathlib import Path
 from constants import *
 from helpers import (find_one_file, find_files, find_and_copy_files)
 
@@ -169,80 +170,29 @@ class Section(object):
 
 class TxSection(Section):
 
-    def __init__ (self, tx='', **kwargs):
+    def __init__ (self, tx='', img_path='',**kwargs):
         Section.__init__(self, **kwargs)
-
+        
         self.tx = tx
+        self.img_path = img_path
 
-        # As the images are added to the HTML, they are given a class. When the
-        # script for the slider is called, it will allow the user to browse all
-        # of the images of that class. Therefore, each slider must have its own
-        # class. Use the same class throughout this instantiation.
-        self.image_class = tx + 'pngs'
-
-        # The modal container must be identified uniquely so that the correct
-        # container is displayed with the correct button. Use this id throughout.
-        self.modal_id = tx + '_modal'
-
-        # Build everything.
         self.run()
 
-
-    def make_brainsprite_viewer(self):
-        # Builds HTML for BrainSprite viewer so users can click through 3d anatomical images.
-        spritelabel = ''
-        spriteviewer = ''
-        spriteloader = ''
-
-        # Not all subjects have T1 and/or T2. See if we have data.
-        mosaic_name = '%s_mosaic.jpg' % self.tx
-        mosaic_path = os.path.join(self.img_path, mosaic_name)
-        if os.path.isfile(mosaic_path):
-            # Insert the appropriate tx value in the ids, etc.
-            spritelabel += '<h6>BrainSprite Viewer: %s</h6>' % self.tx
-            viewer = self.tx + '-viewer'
-            spriteImg = self.tx + '-spriteImg'
-
-             
-
-            spriteImg = glob.glob(os.path.join(self.img_path, '*_desc-brainplot_T1w'))[0]
-            spriteviewer += SPRITE_VIEWER_HTML.format(viewer=viewer, spriteImg=spriteImg,
-                     width='100%')
-
-            spriteloader += SPRITE_LOAD_SCRIPT % {
-                    'tx'       : self.tx,
-                    'viewer'   : viewer,
-                    'spriteImg': spriteImg }
-
-        return spritelabel, spriteviewer, spriteloader
-
-
     def run(self):
-        # Make the brainsprite.
-        brainsprite_label, brainsprite_viewer, brainsprite_loader = self.make_brainsprite_viewer ()
-
-        # The pngs for the slider are already in the img_path. Get the pngs that start
-        # with 'tx' so users can view the higher resolution pngs.
-        pngs_glob = '*_' + self.tx + '-*.png'
-        pngs_list = sorted(find_files(self.img_path, pngs_glob))
-
-        # Just a sanity check, since we happen to know how many to expect.
-        if len(pngs_list) is not 9:
-            print('Expected 9 %s pngs but found %s.' % (self.tx, len(pngs_list))) # TODO: log WARNING
-
-        # Make a modal container with a slider and add the pngs.
-        pngs_slider = ModalSlider(self.modal_id, self.image_class)
-        pngs_slider.add_images(pngs_list)
-
-        # Add HTML for the bar with the brainsprite label and pngs button,
-        # and for the brainsprite viewer.
-        btn_label = 'View %s pngs' % self.tx
-        self.section += TX_SECTION.format(tx=self.tx,brainplot='')
-
-        # HTML for the modal container should be tacked on the end.
-        self.section += pngs_slider.get_container()
-
-        self.scripts = brainsprite_loader + pngs_slider.get_scripts()
+        t1_data = {}
+        for key in  ['t1w_brainplot','t2w_brainplot']:
+            values = IMAGE_INFO[key]
+            pattern = values['pattern'] 
+            print(pattern)
+            print(self.img_path)
+            tx_file = Path(find_one_file(self.img_path, pattern))
+            if 'tw1' in key:
+                t1_data['tx'] = 'T1w'
+            elif 'tw2' in key: 
+                t1_data['tx'] = 'T2w'
+            t1_data['brainplot'] = re.compile("<body>(.*?)</body>", re.DOTALL | re.IGNORECASE).findall((tx_file).read_text())[0].strip()
+           
+        self.section += TX_SECTION.format(tx='t1', **t1_data)
 
 class TasksSection(Section):
 
@@ -469,11 +419,7 @@ class layout_builder(object):
         # Make sections for 'T1' and 'T2' images. Include pngs slider and
         # BrainSprite for each.
         print(self.files_path)
-        brainsplotT1 = glob.glob(self.files_path + '/*_desc-brainplot_T1w.html')[0]
-        brainsplotT2 = glob.glob(self.files_path + '/*_desc-brainplot_T1w.html')[0]
-        t1_section = TxSection(tx='T1',brainplot=brainsplotT1)
-        t2_section = TxSection(tx='T2',brainplot=brainsplotT2)
-        body += t1_section.get_section() + t2_section.get_section()
+       
 
         # Data for this subject/session: i.e., concatenated gray plots and atlas
         # images. (The atlas images will be added to the Registrations slider.)
@@ -483,6 +429,7 @@ class layout_builder(object):
         # Tasks section: data specific to each task/run. Get a list of tasks processed
         # for this subject. (The <task>-in-T1 and T1-in-<task> images will be added to
         # the Registrations slider.)
+        body += TxSection(**kwargs).get_section()
         tasks_list = self.get_list_of_tasks()
         tasks_section = TasksSection(tasks=tasks_list, **kwargs)
         body += tasks_section.get_section()
@@ -493,18 +440,14 @@ class layout_builder(object):
         # There are a bunch of scripts used in this page. Keep their HTML together.
         #scripts = t1_section.get_scripts() + t2_section.get_scripts() 
         scripts = img_modal.get_scripts() + regs_slider.get_scripts()
-        from pathlib import Path
-        src1 = Path(brainsplotT1)
-        src2 = Path(brainsplotT2)
-        import re 
-        src11 = re.compile("<body>(.*?)</body>", re.DOTALL | re.IGNORECASE).findall((src1).read_text())[0].strip()
-        src22 = re.compile("<body>(.*?)</body>", re.DOTALL | re.IGNORECASE).findall((src2).read_text())[0].strip()
         
-        src1 = ' <div class="boiler-html"> ' + src11 + ' </div>'
-        src2 = ' <div class="boiler-html"> ' + src22 + ' </div>'
-   
+        
+        #src1 = ' <div class="boiler-html"> ' + src11 + ' </div>'
+        #src2 = ' <div class="boiler-html"> ' + src22 + ' </div>'
+        #t1_section = TxSection(tx='T1',brainplot=src1)
+        #t2_section = TxSection(tx='T2',brainplot=src2)
         # Assemble and write the document.
-        html_doc = head + src1 + t1_section.get_scripts() + src2 + t2_section.get_scripts() + body + scripts + HTML_END
+        html_doc = head + body + scripts + HTML_END
         if self.session_id is None:
             self.write_html(html_doc, 'executive_summary_%s.html' % (self.subject_id))
         else:

@@ -496,15 +496,18 @@ class layout_builder(object):
         from pathlib import Path
         src1 = Path(brainsplotT1)
         src2 = Path(brainsplotT2)
+        t1_section = TxSection(tx='T1',brainplot=brainsplotT1)
+        t2_section = TxSection(tx='T2',brainplot=brainsplotT2)
         import re 
         src11 = re.compile("<body>(.*?)</body>", re.DOTALL | re.IGNORECASE).findall((src1).read_text())[0].strip()
         src22 = re.compile("<body>(.*?)</body>", re.DOTALL | re.IGNORECASE).findall((src2).read_text())[0].strip()
         
         src1 = ' <div class="boiler-html"> ' + src11 + ' </div>'
         src2 = ' <div class="boiler-html"> ' + src22 + ' </div>'
-   
+        t1_section = TxSection(tx='T1',brainplot=src1)
+        t2_section = TxSection(tx='T2',brainplot=src2)
         # Assemble and write the document.
-        html_doc = head + src1 + t1_section.get_scripts() + src2 + t2_section.get_scripts() + body + scripts + HTML_END
+        html_doc = head + t1_section.get_scripts() + t2_section.get_scripts() + body + scripts + HTML_END
         if self.session_id is None:
             self.write_html(html_doc, 'executive_summary_%s.html' % (self.subject_id))
         else:

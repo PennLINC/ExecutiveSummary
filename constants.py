@@ -1,5 +1,13 @@
 
 IMAGE_INFO = {
+     't1w_brainplot' : { 
+          'pattern': '*desc-brainplot_T1w.html',
+          'title' : 'T1w BrainSprite'
+      },
+      't2w_brainplot' : { 
+          'pattern': '*desc-brainplot_T1w.html',
+          'title' : 'T2w BrainSprite'
+      },
     'task_pre_reg_gray': {
         'pattern': '*%s*desc-precarpetplot_bold.svg',
         'title': 'Pre-Regression'
