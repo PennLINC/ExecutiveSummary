@@ -509,3 +509,6 @@ class layout_builder(object):
             self.write_html(html_doc, 'executive_summary_%s.html' % (self.subject_id))
         else:
             self.write_html(html_doc, 'executive_summary_%s_%s.html' % (self.subject_id, self.session_id))
+
+
+
