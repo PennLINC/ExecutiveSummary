@@ -179,20 +179,22 @@ class TxSection(Section):
         self.run()
 
     def run(self):
-        t1_data = {}
-        for key in  ['t1w_brainplot','t2w_brainplot']:
-            values = IMAGE_INFO[key]
-            pattern = values['pattern'] 
-            print(pattern)
-            print(self.img_path)
-            tx_file = Path(find_one_file(self.img_path, pattern))
-            if 'tw1' in key:
-                t1_data['tx'] = 'T1w'
-            elif 'tw2' in key: 
-                t1_data['tx'] = 'T2w'
-            t1_data['brainplot'] = re.compile("<body>(.*?)</body>", re.DOTALL | re.IGNORECASE).findall((tx_file).read_text())[0].strip()
-           
-        self.section += TX_SECTION.format(tx='t1', **t1_data)
+        values = IMAGE_INFO['t1w_brainplot']
+        tx_file = Path(find_one_file(self.img_path, values['pattern'] ))
+        t1wbrainplot = re.compile("<body>(.*?)</body>", re.DOTALL | re.IGNORECASE).findall((tx_file).read_text())[0].strip()
+        values2 = IMAGE_INFO['t2w_brainplot']
+        tx2_file = Path(find_one_file(self.img_path, values2['pattern'] ))
+        t2wbrainplot = re.compile("<body>(.*?)</body>", re.DOTALL | re.IGNORECASE).findall((tx2_file).read_text())[0].strip()
+        self.section += TX_SECTION_START.format(txx='t1w')
+
+        src1 = Path(tx_file)
+        t1wbrainplot = src1.read_text().strip()
+        src2 = Path(tx2_file)
+        t2wbrainplot = src2.read_text().strip()
+        self.section += T1X_SECTION.format(tx1='T1w',t1wbrainplot=t1wbrainplot)
+        self.section += T2X_SECTION.format(tx2='T2w',t2wbrainplot=t2wbrainplot)
+        #self.section += T2X_SECTION.format(tx='T2w',t2wbrainplot=t2wbrainplot)
+        self.section += TX_SECTION_END.format() 
 
 class TasksSection(Section):
 
@@ -218,6 +220,7 @@ class TasksSection(Section):
         # For the processed files, it's as simple as looking for the pattern in
         # the source-directory. When found and copied to the directory of images,
         # add the row.
+        
         for key in ['bold_t1w_reg']:
             values = IMAGE_INFO[key]
             pattern = values['pattern'] % task_pattern
@@ -429,7 +432,10 @@ class layout_builder(object):
         # Tasks section: data specific to each task/run. Get a list of tasks processed
         # for this subject. (The <task>-in-T1 and T1-in-<task> images will be added to
         # the Registrations slider.)
+
+    
         body += TxSection(**kwargs).get_section()
+     
         tasks_list = self.get_list_of_tasks()
         tasks_section = TasksSection(tasks=tasks_list, **kwargs)
         body += tasks_section.get_section()

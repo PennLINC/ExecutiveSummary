@@ -188,34 +188,6 @@ class TxSection(Section):
         self.run()
 
 
-    def make_brainsprite_viewer(self):
-        # Builds HTML for BrainSprite viewer so users can click through 3d anatomical images.
-        spritelabel = ''
-        spriteviewer = ''
-        spriteloader = ''
-
-        # Not all subjects have T1 and/or T2. See if we have data.
-        mosaic_name = '%s_mosaic.jpg' % self.tx
-        mosaic_path = os.path.join(self.img_path, mosaic_name)
-        if os.path.isfile(mosaic_path):
-            # Insert the appropriate tx value in the ids, etc.
-            spritelabel += '<h6>BrainSprite Viewer: %s</h6>' % self.tx
-            viewer = self.tx + '-viewer'
-            spriteImg = self.tx + '-spriteImg'
-
-             
-
-            spriteImg = glob.glob(os.path.join(self.img_path, '*_desc-brainplot_T1w'))[0]
-            spriteviewer += SPRITE_VIEWER_HTML.format(viewer=viewer, spriteImg=spriteImg,
-                     width='100%')
-
-            spriteloader += SPRITE_LOAD_SCRIPT % {
-                    'tx'       : self.tx,
-                    'viewer'   : viewer,
-                    'spriteImg': spriteImg }
-
-        return spritelabel, spriteviewer, spriteloader
-
 
     def run(self):
         # Make the brainsprite.

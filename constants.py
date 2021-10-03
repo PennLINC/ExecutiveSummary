@@ -5,7 +5,7 @@ IMAGE_INFO = {
           'title' : 'T1w BrainSprite'
       },
       't2w_brainplot' : { 
-          'pattern': '*desc-brainplot_T1w.html',
+          'pattern': '*desc-brainplot_T2w.html',
           'title' : 'T2w BrainSprite'
       },
     'task_pre_reg_gray': {
@@ -77,14 +77,36 @@ HTML_END = """
 # T1 or T2 pngs.
 # Needs the following values:
 #    tx, brainsprite_label, modal_button, brainsprite_viewer.
-TX_SECTION = """
-<section id="{tx}">
-    <div w3-include-html={brainplot}></div>
+TX_SECTION_START = """
+<section id="{txx}">
+    <div class="w3-container">
+        <div class="w3-row-padding">
+            <div class="w3-center"><h2>Anatomical Data</h2></div>
+        <div>
+
+        </div>
+</section>
+        """
+
+
+T1X_SECTION = """
+<section id="{tx1}">
+    <div class="w3-col l1 label2"> {tx1} </div>
+    <div  {t1wbrainplot} </div>
 </section>
 """
 
+T2X_SECTION = """
+<section id="{tx2}">
+    <div class="w3-col l1 label2"> {tx2} </div>
+    <div {t2wbrainplot} </div>
+</section>
 
+"""
 
+TX_SECTION_END = """
+
+"""
 # Layout images in different formats - row, half, quarter.
 # Needs the following values:
 #    row_label, row_img, row_modal, row_idx
